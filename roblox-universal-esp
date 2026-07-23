@@ -1,0 +1,55 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function getHighlightColor(player)
+    if player.Team then
+        return player.Team.TeamColor.Color
+    end
+
+    return Color3.fromRGB(255, 255, 255)
+end
+
+local function setupCharacter(player, character)
+    if player == LocalPlayer then
+        return
+    end
+
+    local highlight = character:FindFirstChild("ESPHighlight")
+
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "ESPHighlight"
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.OutlineColor = Color3.new(1, 1, 1)
+        highlight.Adornee = character
+        highlight.Parent = character
+    end
+
+    highlight.FillColor = getHighlightColor(player)
+
+    player:GetPropertyChangedSignal("Team"):Connect(function()
+        if highlight.Parent then
+            highlight.FillColor = getHighlightColor(player)
+        end
+    end)
+end
+
+local function setupPlayer(player)
+    if player == LocalPlayer then
+        return
+    end
+
+    if player.Character then
+        setupCharacter(player, player.Character)
+    end
+
+    player.CharacterAdded:Connect(function(character)
+        setupCharacter(player, character)
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    setupPlayer(player)
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
